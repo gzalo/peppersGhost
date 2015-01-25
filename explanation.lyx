@@ -1,0 +1,249 @@
+#LyX 2.1 created this file. For more info see http://www.lyx.org/
+\lyxformat 474
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_math auto
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Pepper's Ghost Compensation
+\end_layout
+
+\begin_layout Author
+Gonzalo Ávila Alterach (http://gzalo.com)
+\end_layout
+
+\begin_layout Standard
+One common drawback of using the Pepper's Ghost effect is that it requires
+ very thin glass or other suitable material, because otherwise a double
+ image is seen, product of the reflection on both surfaces of the used sheet.
+ Hence more expensive and hard to find materials are needed, for instance
+ dark acrylic or glasses with anti-reflection coating.
+\end_layout
+
+\begin_layout Standard
+This project attempts to compensate that effect, by modifying the image
+ or video to be used in the effect, using OpenGL for accelerated filtering.
+\end_layout
+
+\begin_layout Section
+Modeling the glass
+\end_layout
+
+\begin_layout Standard
+In a 1D problem, the glass reflection may be modeled as a simple echo: the
+ output consists of the input overlapped with the input shifted in space
+ a certain amount 
+\begin_inset Formula $\tau$
+\end_inset
+
+ (depending on the glass thickness).
+ The second reflection, coming from the back surface of the glass is often
+ attenuated by a certain value 
+\begin_inset Formula $\alpha$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Assuming that the glass works equally amongst its axis, and that the addition
+ is linear, it can be thought as an LTI system with the following impulsive
+ response:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+h(x)=\delta(x)+\alpha\delta(x-\tau)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In reality, it can be seen that the addition isn't exactly linear (both
+ due to the nonlinearities of the glass and the computer screen) and that
+ the parameters depend mainly on the viewing angle and the position and
+ angle of the glass.
+\end_layout
+
+\begin_layout Section
+Compensation
+\end_layout
+
+\begin_layout Standard
+By applying the Fourier transform, it can be seen that the frequency response
+ of the 1D LTI system is the following:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+H(j\omega)=1+\alpha e^{-\tau j\omega}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Since a filter that inverts the glass effect is wanted, the frequency response
+ must be the reciprocal of those of the glass:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+H_{filter}(j\omega)=\frac{1}{1+\alpha e^{-\tau j\omega}}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+By applying the Fourier antitransform, we get that the response of the filter
+ is:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+h_{filter}(x)=\sum_{k=0}^{\infty}(-\alpha)^{k}\delta(x-k\tau)=\delta(x)-\alpha\delta(x-\tau)+\alpha^{2}\delta(x-2\tau)-\cdots
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+It can be seen that each term acts by erasing the reflection of the previous
+ one, so the final effect would be similar to using a glass with infinite
+ thickness.
+\end_layout
+
+\begin_layout Section
+Implementation
+\end_layout
+
+\begin_layout Standard
+To implement the convolution in real-time, an OpenGL shader was used.
+ The impulsive response was cutoff after the 5th term, since there isn't
+ a big difference after it.
+ Since the system isn't exactly linear, fine tuning can be used for each
+ of the parameters.
+ Also, to do gamma correction and work in a linear space inside the shader,
+ each one of the texture lookups get's powered to a factor 
+\begin_inset Formula $\gamma$
+\end_inset
+
+.
+ 
+\end_layout
+
+\begin_layout Standard
+The rendering utilizes this equation:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+OutColor=\left(image(x+\tau)^{\gamma}+\alpha_{1}image(x+2\tau)^{\gamma}+\alpha_{2}image(x+3\tau)^{\gamma}+\alpha_{3}image(x+3\tau)^{\gamma}+\alpha_{4}image(x+4\tau)^{\gamma}\right)^{1/\gamma}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+In order to use the filter correctly, the parameters need to be adjusted
+ in order to minimize the unwanted ghost images.
+ An automated method with a feedback loop using a camera might be possible.
+ To fine-tune the 
+\begin_inset Formula $\tau$
+\end_inset
+
+ parameter, which changes amongst the main axis of the glass, it's possible
+ to calibrate it on the top and on the bottom, and then use a linear fit
+ to apply the effect correctly in the whole surface of the glass.
+ Each parameter can tuned on each position by using a texture containing
+ the value for each pixel.
+\end_layout
+
+\end_body
+\end_document
