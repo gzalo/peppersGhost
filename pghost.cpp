@@ -108,7 +108,7 @@ int main(int argc, char **args){
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	
-	SDL_Window *window = SDL_CreateWindow("Pepper's ghost", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, dScrWidth, dScrHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN);
+	SDL_Window *window = SDL_CreateWindow("Pepper's ghost", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, dScrWidth, dScrHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN_DESKTOP);
 	
 	if(window == NULL){
 		cerr << "Error in SDL_SetVideoMode: " << SDL_GetError() << endl;
@@ -145,14 +145,16 @@ int main(int argc, char **args){
 	GLint t0_loc = glGetUniformLocation(program,"Texture0"); glUniform1i(t0_loc, 0);
 	GLint delta_loc = glGetUniformLocation(program,"delta"); glUniform2f(delta_loc, 1.0/dScrWidth, 1.0/dScrHeight);
 	
-	int k[12]={0};
+	int k[14]={0};
 	int quit=0, frame=0, oldMs=0;
-	float repet=18.87;
+	float repet=14.5;
 	float efac1=0.495;
-	float efac2=0.198;
-	float efac3=0.005;
-	float efac4=0.012;
-	float efac5=2.2;
+	float efac2=0;
+	float efac3=0;
+	float efac4=0;
+	float efac5=0;
+	float gamma=2.2;
+	bool disable=false;
 	
 	while(!quit){
 	
@@ -173,6 +175,9 @@ int main(int argc, char **args){
 				if(event.key.keysym.sym == SDLK_g) k[9]=1;		
 				if(event.key.keysym.sym == SDLK_y) k[10]=1;
 				if(event.key.keysym.sym == SDLK_h) k[11]=1;			
+				if(event.key.keysym.sym == SDLK_u) k[12]=1;		
+				if(event.key.keysym.sym == SDLK_j) k[13]=1;		
+				if(event.key.keysym.sym == SDLK_SPACE) disable=!disable;		
 			}
 			if(event.type == SDL_KEYUP){
 				if(event.key.keysym.sym == SDLK_q) k[0]=0;
@@ -186,7 +191,9 @@ int main(int argc, char **args){
 				if(event.key.keysym.sym == SDLK_t) k[8]=0;
 				if(event.key.keysym.sym == SDLK_g) k[9]=0;			
 				if(event.key.keysym.sym == SDLK_y) k[10]=0;
-				if(event.key.keysym.sym == SDLK_h) k[11]=0;							
+				if(event.key.keysym.sym == SDLK_h) k[11]=0;
+				if(event.key.keysym.sym == SDLK_u) k[12]=0;		
+				if(event.key.keysym.sym == SDLK_j) k[13]=0;						
 			}
 		}
 		if(k[0]) repet+=0.01;
@@ -201,17 +208,37 @@ int main(int argc, char **args){
 		if(k[9]) efac4-=0.001;
 		if(k[10]) efac5+=0.001;
 		if(k[11]) efac5-=0.001;		
+		if(k[12]) efac5+=0.01;
+		if(k[13]) efac5-=0.01;			
 		
 		glViewport(0,0,dScrWidth,dScrHeight);
 		glClear(GL_COLOR_BUFFER_BIT);
 		
 		glUseProgram(program);
-		GLint repet_loc = glGetUniformLocation(program,"repet"); glUniform1f(repet_loc, repet);
-		GLint efac1_loc = glGetUniformLocation(program,"efac1"); glUniform1f(efac1_loc, efac1);
-		GLint efac2_loc = glGetUniformLocation(program,"efac2"); glUniform1f(efac2_loc, efac2);
-		GLint efac3_loc = glGetUniformLocation(program,"efac3"); glUniform1f(efac3_loc, efac3);
-		GLint efac4_loc = glGetUniformLocation(program,"efac4"); glUniform1f(efac4_loc, efac4);
-		GLint efac5_loc = glGetUniformLocation(program,"gamma"); glUniform1f(efac5_loc, efac5);
+		GLint repet_loc = glGetUniformLocation(program,"repet"); 
+		GLint efac1_loc = glGetUniformLocation(program,"efac1"); 
+		GLint efac2_loc = glGetUniformLocation(program,"efac2"); 
+		GLint efac3_loc = glGetUniformLocation(program,"efac3"); 
+		GLint efac4_loc = glGetUniformLocation(program,"efac4"); 
+		GLint efac5_loc = glGetUniformLocation(program,"efac5"); 
+		GLint gamma_loc = glGetUniformLocation(program,"gamma"); 
+		
+		glUniform1f(repet_loc, repet);
+		if(disable){
+			glUniform1f(efac1_loc, 0.0f);
+			glUniform1f(efac2_loc, 0.0f);
+			glUniform1f(efac3_loc, 0.0f);
+			glUniform1f(efac4_loc, 0.0f);
+			glUniform1f(efac5_loc, 0.0f);
+			glUniform1f(gamma_loc, gamma);
+		}else{
+			glUniform1f(efac1_loc, efac1);
+			glUniform1f(efac2_loc, efac2);
+			glUniform1f(efac3_loc, efac3);
+			glUniform1f(efac4_loc, efac4);
+			glUniform1f(efac5_loc, efac5);
+			glUniform1f(gamma_loc, gamma);
+		}
 		
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, imgId);
