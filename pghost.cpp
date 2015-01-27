@@ -148,11 +148,11 @@ int main(int argc, char **args){
 	int k[14]={0};
 	int quit=0, frame=0, oldMs=0;
 	float repet=14.5;
-	float efac1=0.495;
-	float efac2=0;
-	float efac3=0;
-	float efac4=0;
-	float efac5=0;
+	float efac1=0.5;
+	float efac2=0.25;
+	float efac3=0.125;
+	float efac4=0.06;
+	float efac5=0.03;
 	float gamma=2.2;
 	bool disable=false;
 	
@@ -196,20 +196,20 @@ int main(int argc, char **args){
 				if(event.key.keysym.sym == SDLK_j) k[13]=0;						
 			}
 		}
-		if(k[0]) repet+=0.01;
-		if(k[1]) repet-=0.01;
-		if(k[2]) efac1+=0.001;
-		if(k[3]) efac1-=0.001;
-		if(k[4]) efac2+=0.001;
-		if(k[5]) efac2-=0.001;
-		if(k[6]) efac3+=0.001;
-		if(k[7]) efac3-=0.001;
-		if(k[8]) efac4+=0.001;
-		if(k[9]) efac4-=0.001;
-		if(k[10]) efac5+=0.001;
-		if(k[11]) efac5-=0.001;		
-		if(k[12]) efac5+=0.01;
-		if(k[13]) efac5-=0.01;			
+		if(k[0]) repet+=0.1;
+		if(k[1]) repet-=0.1;
+		if(k[2]) efac1+=0.01;
+		if(k[3]) efac1-=0.01;
+		if(k[4]) efac2+=0.01;
+		if(k[5]) efac2-=0.01;
+		if(k[6]) efac3+=0.01;
+		if(k[7]) efac3-=0.01;
+		if(k[8]) efac4+=0.01;
+		if(k[9]) efac4-=0.01;
+		if(k[10]) efac5+=0.01;
+		if(k[11]) efac5-=0.01;		
+		if(k[12]) efac5+=0.1;
+		if(k[13]) efac5-=0.1;			
 		
 		glViewport(0,0,dScrWidth,dScrHeight);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -261,7 +261,7 @@ int main(int argc, char **args){
 			frame=0;
 			int dt = SDL_GetTicks()-oldMs;
 			oldMs = SDL_GetTicks();
-			char bf[32];
+			char bf[128];
 			sprintf(bf, "%.2f FPS %f %f %f %f %f %f", 100000.0f/(float)dt, repet, efac1, efac2, efac3, efac4, efac5);
 			SDL_SetWindowTitle(window, bf);
 		}

@@ -1,6 +1,6 @@
 all:
-	g++ pghost.cpp -o pghost.exe -lmingw32 -lsdl2main -lsdl2 -lsdl2_image -lopengl32 -lglew32 -O2
+	g++ pghost.cpp -o pghost.exe -lSDL2 -lSDL2_image -lGL -lGLEW -O2
 	
 run:
-	pghost
+	./pghost.exe
 	
